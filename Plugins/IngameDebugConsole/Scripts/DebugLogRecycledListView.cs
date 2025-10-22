@@ -45,6 +45,8 @@ namespace IngameDebugConsole
 
 		private bool isCollapseOn = false;
 
+        private bool viewportSizeChanged;
+
 		// Current indices of debug entries shown on screen
 		private int currentTopIndex = -1, currentBottomIndex = -1;
 
@@ -293,23 +295,34 @@ namespace IngameDebugConsole
 			return -1;
 		}
 
-		// Log window's width has changed, update the expanded (currently selected) log's height
-		public void OnViewportWidthChanged()
-		{
-			if( indexOfSelectedLogEntry >= entriesToShow.Count )
-				return;
+        private void OnRectTransformDimensionsChange()
+        {
+            viewportSizeChanged = true;
+        }
 
+        private void LateUpdate()
+        {
+            if (viewportSizeChanged)
+            {
+                viewportSizeChanged = false;
+                OnViewportSizeChanged();
+            }
+        }
+
+        private void OnViewportSizeChanged()
+		{
+            if (indexOfSelectedLogEntry >= entriesToShow.Count)
+            {
+                UpdateItemsInTheList(false);
+                return;
+            }
+
+            // Update the expanded (currently selected) log's height
 			CalculateSelectedLogEntryHeight();
 			CalculateContentHeight();
 			UpdateItemsInTheList( true );
 
 			manager.ValidateScrollPosition();
-		}
-
-		// Log window's height has changed, update the list
-		public void OnViewportHeightChanged()
-		{
-			UpdateItemsInTheList( false );
 		}
 
 		private void CalculateContentHeight()

@@ -885,8 +885,6 @@ namespace IngameDebugConsole
 							}
 						}
 					}
-
-					recycledListView.OnViewportWidthChanged();
 				}
 
 				// If SnapToBottom is enabled, force the scrollbar to the bottom
@@ -950,11 +948,8 @@ namespace IngameDebugConsole
 
 			if( screenDimensionsChanged )
 			{
-				// Update the recycled list view
-				if( isLogWindowVisible )
-					recycledListView.OnViewportHeightChanged();
-				else
-					popupManager.UpdatePosition( true );
+                if (!isLogWindowVisible)
+                    popupManager.UpdatePosition(true);
 
 #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS
 				CheckScreenCutout();
@@ -1643,9 +1638,6 @@ namespace IngameDebugConsole
 			anchorMin.y = Mathf.Clamp01( localPoint.y / canvasSize.y );
 
 			logWindowTR.anchorMin = anchorMin;
-
-			// Update the recycled list view
-			recycledListView.OnViewportHeightChanged();
 		}
 
 		// Determine the filtered list of debug entries to show on screen
