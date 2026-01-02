@@ -1576,12 +1576,46 @@ namespace IngameDebugConsole
 				commandInputFieldAutoCompletedNow = false;
 		}
 
-		// Command input field has lost focus
-		private void OnEndEditCommand( string command )
-		{
-			if( commandSuggestionsContainer.gameObject.activeSelf )
-				commandSuggestionsContainer.gameObject.SetActive( false );
-		}
+        // Command input field has lost focus
+        private void OnEndEditCommand(string command)
+        {
+            if (!commandSuggestionsContainer.gameObject.activeSelf)
+                return;
+
+            // Check if any command suggestion is clicked
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+            if (visibleCommandSuggestionInstances > 0 && Pointer.current != null && Pointer.current.press.wasPressedThisFrame)
+#else
+            if (visibleCommandSuggestionInstances > 0 && Input.GetMouseButtonDown(0))
+#endif
+            {
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+                Vector2 pointerPosition = Pointer.current.position.ReadValue();
+#else
+                Vector2 pointerPosition = Input.mousePosition;
+#endif
+
+                Canvas canvas = commandInputField.textComponent.canvas;
+                Camera canvasCamera = (canvas.renderMode == RenderMode.ScreenSpaceOverlay || (canvas.renderMode == RenderMode.ScreenSpaceCamera && canvas.worldCamera == null)) ? null : (canvas.worldCamera != null) ? canvas.worldCamera : Camera.main;
+                if (RectTransformUtility.RectangleContainsScreenPoint(commandSuggestionsContainer, pointerPosition, canvasCamera) && RectTransformUtility.ScreenPointToLocalPointInRectangle(commandSuggestionsContainer, pointerPosition, canvasCamera, out Vector2 localPoint))
+                {
+                    /// <see cref="commandSuggestionInstances"/> have their Pivot Y set to 1 so we need localPoint to have the same pivot value.
+                    localPoint.y -= commandSuggestionsContainer.rect.height;
+
+                    for (int i = 0; i < visibleCommandSuggestionInstances; i++)
+                    {
+                        if (localPoint.y >= commandSuggestionInstances[i].rectTransform.anchoredPosition.y - commandSuggestionInstances[i].rectTransform.sizeDelta.y * commandSuggestionInstances[i].rectTransform.pivot.y)
+                        {
+                            commandInputField.text = matchingCommandSuggestions[i].command + ((matchingCommandSuggestions[i].parameters.Length > 0) ? " " : null);
+                            StartCoroutine(ActivateCommandInputFieldCoroutine());
+                            return;
+                        }
+                    }
+                }
+            }
+
+            commandSuggestionsContainer.gameObject.SetActive(false);
+        }
 
 		// Debug window is being resized,
 		// Set the sizeDelta property of the window accordingly while
@@ -1821,17 +1855,22 @@ namespace IngameDebugConsole
 #endif
 		}
 
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBGL
-		private IEnumerator ActivateCommandInputFieldCoroutine()
-		{
-			// Waiting 1 frame before activating commandInputField ensures that the toggleKey isn't captured by it
-			yield return null;
-			commandInputField.ActivateInputField();
+        private IEnumerator ActivateCommandInputFieldCoroutine()
+        {
+            yield return null;
 
-			yield return null;
-			commandInputField.MoveTextEnd( false );
-		}
-#endif
+            /// Don't select the text during this automated activation of <see cref="TMP_InputField"/> because it's distracting.
+            bool onFocusSelectAll = commandInputField.onFocusSelectAll;
+            commandInputField.onFocusSelectAll = false;
+
+            commandInputField.ActivateInputField();
+
+            /// Wait for <see cref="TMP_InputField.LateUpdate"/> because input field's activation is handled there.
+            yield return null;
+
+            commandInputField.MoveTextEnd(false);
+            commandInputField.onFocusSelectAll = onFocusSelectAll;
+        }
 
 		// Pool an unused log item
 		internal void PoolLogItem( DebugLogItem logItem )
