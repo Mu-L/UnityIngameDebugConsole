@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using TMPro;
-#if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
+#if UNITY_EDITOR
 using Screen = UnityEngine.Device.Screen; // To support Device Simulator on Unity 2021.1+
 #endif
 
@@ -23,7 +23,6 @@ namespace IngameDebugConsole
 		// Canvas group to modify visibility of the popup
 		private CanvasGroup canvasGroup;
 
-#pragma warning disable 0649
 		[SerializeField]
 		private DebugLogManager debugManager;
 
@@ -40,7 +39,6 @@ namespace IngameDebugConsole
 		private Color alertColorWarning;
 		[SerializeField]
 		private Color alertColorError;
-#pragma warning restore 0649
 
 		// Number of new debug entries since the log window has been closed
 		private int newInfoCount = 0, newWarningCount = 0, newErrorCount = 0;

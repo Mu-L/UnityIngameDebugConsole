@@ -9,7 +9,7 @@ using TMPro;
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
 #endif
-#if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
+#if UNITY_EDITOR
 using Screen = UnityEngine.Device.Screen; // To support Device Simulator on Unity 2021.1+
 #endif
 
@@ -47,7 +47,6 @@ namespace IngameDebugConsole
 	{
 		public static DebugLogManager Instance { get; private set; }
 
-#pragma warning disable 0649
 		[Header( "Properties" )]
 		[SerializeField]
 		[HideInInspector]
@@ -325,7 +324,6 @@ namespace IngameDebugConsole
 		// Recycled list view to handle the log items efficiently
 		[SerializeField]
 		private DebugLogRecycledListView recycledListView;
-#pragma warning restore 0649
 
 		private bool isLogWindowVisible = true;
 		public bool IsLogWindowVisible { get { return isLogWindowVisible; } }
