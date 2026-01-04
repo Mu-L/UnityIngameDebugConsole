@@ -53,6 +53,12 @@ namespace IngameDebugConsole
 
 		public bool IsVisible { get; private set; }
 
+        private Vector2 SavedNormalizedPosition
+        {
+            get => PlayerPrefs.HasKey("IDGPPos") ? JsonUtility.FromJson<Vector2>(PlayerPrefs.GetString("IDGPPos", "{}")) : new Vector2(0.5f, 0f); // Right edge by default
+            set => PlayerPrefs.SetString("IDGPPos", JsonUtility.ToJson(value));
+        }
+
 		private void Awake()
 		{
 			popupTransform = (RectTransform) transform;
@@ -62,13 +68,13 @@ namespace IngameDebugConsole
 			normalColor = backgroundImage.color;
 
 			halfSize = popupTransform.sizeDelta * 0.5f;
-
-			Vector2 pos = popupTransform.anchoredPosition;
-			if( pos.x != 0f || pos.y != 0f )
-				normalizedPosition = pos.normalized; // Respect the initial popup position set in the prefab
-			else
-				normalizedPosition = new Vector2( 0.5f, 0f ); // Right edge by default
+            normalizedPosition = SavedNormalizedPosition;
 		}
+
+        protected void OnDestroy()
+        {
+            SavedNormalizedPosition = normalizedPosition;
+        }
 
 		public void NewLogsArrived( int newInfo, int newWarning, int newError )
 		{
